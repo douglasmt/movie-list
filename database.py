@@ -34,6 +34,7 @@ where users.username = ?;"""
 INSERT_WATCHED_MOVIE = "INSERT INTO watched (user_username, movie_id) VALUES (?, ?)"
 SET_MOVIE_WATCHED = "UPDATE movies SET watched = 1 WHERE title = ?;"
 SEARCH_MOVIES = "SELECT * FROM movies WHERE title LIKE ?"
+CREATE_RELEASE_INDEX = "CREATE UNIQUE INDEX IF NOT EXISTS idx_movies_release ON  movies(release_timestamp); "
 
 
 connection = sqlite3.connect("data.db")
@@ -42,7 +43,8 @@ def create_tables():                    # no return because it just creates the 
     with connection:
         connection.execute(CREATE_MOVIES_TABLE)
         connection.execute(CREATE_USERS_TABLE)
-        connection.execute(CREATE_WATCHED_TABLE) 
+        connection.execute(CREATE_WATCHED_TABLE)
+        connection.execute(CREATE_RELEASE_INDEX)
 
 def add_user(username):                 # no return because it just insert data provided to the table
     with connection:
