@@ -1,40 +1,55 @@
 import datetime
 import sqlite3
 
-# title, release_date, watched
+# Table that stores the movies and their releases
 CREATE_MOVIES_TABLE = """CREATE TABLE IF NOT EXISTS movies (
+    id INTEGER PRIMARY KEY,
     title TEXT,
     release_timestamp REAL
 );"""
 
-CREATE_WATCHLIST_TABLE = """CREATE TABLE IF NOT EXISTS watched (
-    watcher_name TEXT,
-    title TEXT
-)"""
+# Table that stores the user name
+CREATE_USERS_TABLE = """CREATE TABLE IF NOT EXISTS users (
+    username TEXT PRIMARY KEY
+);"""
+
+# Table that stores the user name
+CREATE_WATCHED_TABLE = """CREATE TABLE IF NOT EXISTS watched (
+    user_username TEXT,
+    movie_id INTEGER,
+    FOREIGN KEY(user_username) REFERENCES users(username),
+    FOREIGN KEY(movie_id) REFERENCES movies(id)
+);"""
 
 INSERT_MOVIE = "INSERT INTO movies (title, release_timestamp) VALUES (?, ?);"
+INSERT_USER = "INSERT INTO users (username) VALUES (?);"
 DELETE_MOVIE = "DELETE FROM movies WHERE title = ?;"
 SELECT_ALL_MOVIES = "SELECT * FROM movies;"
 SELECT_UPCOMING_MOVIES = "SELECT * FROM movies WHERE release_timestamp > ?;"
-SELECT_WATCHED_MOVIES = "SELECT * FROM watched WHERE watcher_name = ?;"
-INSERT_WATCHED_MOVIE = "INSERT INTO watched (watcher_name, title) VALUES (?, ?)"
+SELECT_WATCHED_MOVIES = "SELECT * FROM watched WHERE user_username = ?;"
+INSERT_WATCHED_MOVIE = "INSERT INTO watched (user_username, movie_id) VALUES (?, ?)"
 SET_MOVIE_WATCHED = "UPDATE movies SET watched = 1 WHERE title = ?;"
 
 
 connection = sqlite3.connect("data.db")
 
-def create_tables():
+def create_tables():                    # no return because it just creates the table
     with connection:
         connection.execute(CREATE_MOVIES_TABLE)
-        connection.execute(CREATE_WATCHLIST_TABLE)
+        connection.execute(CREATE_USERS_TABLE)
+        connection.execute(CREATE_WATCHED_TABLE) 
 
-def add_movie(title,release_timestamp):
+def add_user(username):                 # no return because it just insert data provided to the table
+    with connection:
+        connection.execute(INSERT_USER, (username,))
+
+def add_movie(title,release_timestamp): # no return because it just insert data provided to the table
     with connection:
         connection.execute(INSERT_MOVIE, (title,release_timestamp))
 
-def get_movies(upcoming=False):
+def get_movies(upcoming=False):         # .fetchall(): all the results are returned to the variable used in the call
     with connection:
-        cursor = connection.cursor()
+        cursor = connection.cursor()    # takes the list
         if upcoming:
             today_timestamp = datetime.datetime.today().timestamp() # datetime module, class, and today method, with today's date in it and the seconds(REAL)
             cursor.execute(SELECT_UPCOMING_MOVIES, (today_timestamp,))
@@ -43,13 +58,12 @@ def get_movies(upcoming=False):
         return cursor.fetchall()
 
 
-def watch_movie(username, title):
-    with connection:
-        connection.execute(DELETE_MOVIE, (title,))
-        connection.execute(INSERT_WATCHED_MOVIE, (username,title))
+def watch_movie(username, movie_id):    # no return because it just insert data provided to the table
+    with connection:        
+        connection.execute(INSERT_WATCHED_MOVIE, (username, movie_id))
 
-def get_watched_movies(username):
-    with connection:
-        cursor = connection.cursor()
+def get_watched_movies(username):       # .fetchall(): all the results are returned to the variable used in the call
+    with connection:                    # fetchone():  would just return one row
+        cursor = connection.cursor()    # takes the list
         cursor.execute(SELECT_WATCHED_MOVIES, (username,) )
-        return cursor.fetchall()
+        return cursor.fetchall() 
